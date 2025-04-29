@@ -1,0 +1,16 @@
+uniform float time;
+varying vec2 vUv;
+varying vec3 vPosition;
+attribute vec2 reference;
+uniform sampler2D positionTexture;
+
+void main() {
+    vUv = reference;
+
+    vec3 pos = texture(positionTexture, reference).xyz;
+
+    vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+
+    gl_PointSize = 100.0 * (1.0 / - mvPosition.z);
+    gl_Position = projectionMatrix * mvPosition;
+}
