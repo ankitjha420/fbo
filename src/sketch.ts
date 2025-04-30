@@ -13,7 +13,7 @@ const device = {
     height: window.innerHeight,
     pixelRatio: window.devicePixelRatio
 }
-const WIDTH = 128
+const WIDTH = 32
 
 export class Sketch {
     canvas: HTMLCanvasElement
@@ -29,12 +29,15 @@ export class Sketch {
     material?: THREE.ShaderMaterial
     gltfLoader: GLTFLoader
     model?: THREE.Mesh
+    isModel: boolean = false
     mouse: THREE.Vector2 = new THREE.Vector2(0, 0)
     mouseTarget: THREE.Vector2 = new THREE.Vector2(0, 0)
     dtPosition?: THREE.DataTexture
     positionVariable: any
     facePos?: THREE.TypedArray
     faceNum?: number
+    geometry: THREE.BufferGeometry<THREE.NormalBufferAttributes> | undefined
+    sphereGeometry?: THREE.IcosahedronGeometry
 
     constructor(canvas: HTMLCanvasElement) {
         this.time = 0
@@ -58,16 +61,17 @@ export class Sketch {
         this.controls = new OrbitControls(this.camera, canvas)
         this.gltfLoader = new GLTFLoader()
         this.clock = new THREE.Clock()
+        document.getElementById('switch')?.addEventListener('click', this.handleSwitch.bind(this))
 
         this.initStats()
         this.gltfLoader.load(face, (gltf: GLTF) => {
             this.model = gltf.scene.children[0].children[0].children[0].children[0] as THREE.Mesh
             this.model.geometry.scale(0.025, 0.025, 0.025)
             this.model.geometry.rotateX(Math.PI / 2 * 3)
+            this.model.geometry.rotateY(Math.PI / 2 * -3)
 
             this.facePos = this.model.geometry.attributes.position.array
             this.faceNum = this.facePos.length / 3
-            console.log(this.facePos)
 
             this.init()
         })
@@ -82,7 +86,6 @@ export class Sketch {
     }
 
     addGeometry(): void {
-        const plane = new THREE.BufferGeometry()
         this.material = new THREE.ShaderMaterial({
             side: THREE.DoubleSide,
             fragmentShader: fragment,
@@ -96,24 +99,9 @@ export class Sketch {
             }
         })
 
-        let positions: Float32Array = new Float32Array(WIDTH * WIDTH * 3)
-        let reference: Float32Array = new Float32Array(WIDTH * WIDTH * 2)
-        for (let i = 0; i < WIDTH * WIDTH; i++) {
-            let x: number = Math.random()
-            let y: number = Math.random()
-            let z: number = Math.random()
-
-            let xx: number = (i % WIDTH) / WIDTH
-            let yy: number = ~~(i / WIDTH) / WIDTH
-
-            positions.set([x, y, z], i * 3)
-            reference.set([xx, yy], i * 2)
-        }
-
-        plane.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-        plane.setAttribute('reference', new THREE.BufferAttribute(reference, 2))
-
-        this.mesh = new THREE.Points(plane, this.material)
+        this.geometry = this.model?.geometry
+        this.sphereGeometry = new THREE.IcosahedronGeometry(1.0, 64)
+        this.mesh = new THREE.Points(this.sphereGeometry, this.material)
         this.scene.add(this.mesh)
     }
 
@@ -187,6 +175,11 @@ export class Sketch {
 
     resize(): void {
         window.addEventListener('resize', this.onResize.bind(this))
+    }
+
+    handleSwitch(): void {
+        this.mesh!.geometry = this.isModel ? this.sphereGeometry! : this.model!.geometry
+        this.isModel = !this.isModel
     }
 
     onResize(): void {

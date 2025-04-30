@@ -94,3 +94,21 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.curtain {
+    width: 100%;
+    position: fixed;
+    height: 50%;
+    background: white;
+    z-index: 100;
+    top: 0;
+    mix-blend-mode: difference;
+}
+
+#switch {
+    position: absolute;
+    top: 2rem;
+    right: 2rem;
+    border: 1px solid #fff;
+    z-index: 101;
+}
