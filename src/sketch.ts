@@ -56,7 +56,7 @@ export class Sketch {
         this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
         this.renderer.setSize(device.width, device.height)
         this.renderer.setPixelRatio(Math.min(device.pixelRatio, 2))
-        this.renderer.setClearColor(0xeeeeee, 1)
+        this.renderer.setClearColor(0x71797E, 1)
 
         this.controls = new OrbitControls(this.camera, canvas)
         this.gltfLoader = new GLTFLoader()

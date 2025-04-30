@@ -1,17 +1,21 @@
 {
 	"name": "fbo",
+	"homepage": "https://ankitjha420.github.io/fbo/",
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
 		"build": "tsc && vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"deploy": "gh-pages -d dist",
+		"predeploy": "npm run build"
 	},
 	"devDependencies": {
 		"@types/three": "^0.176.0",
 		"typescript": "~5.7.2",
 		"vite": "^6.3.1",
+		"gh-pages": "^6.3.0",
 		"vite-plugin-glsl": "^1.4.1"
 	},
 	"dependencies": {
