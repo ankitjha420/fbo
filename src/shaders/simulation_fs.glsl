@@ -1,6 +1,22 @@
-uniform float time;
-uniform float delta;
-uniform sampler2D texturePosition;
+
+// simulation
+
+varying vec2 vUv;
+uniform sampler2D texture;
+uniform float timer;
+uniform float frequency;
+uniform float amplitude;
+uniform float maxDistance;
+
+//
+// Description : Array and textureless GLSL 2D simplex noise function.
+//      Author : Ian McEwan, Ashima Arts.
+//  Maintainer : ijm
+//     Lastmod : 20110822 (ijm)
+//     License : Copyright (C) 2011 Ashima Arts. All rights reserved.
+//               Distributed under the MIT License. See LICENSE file.
+//               https://github.com/ashima/webgl-noise
+//
 
 vec3 mod289(vec3 x) {
     return x - floor(x * (1.0 / 289.0)) * 289.0;
@@ -14,7 +30,8 @@ vec3 permute(vec3 x) {
     return mod289(((x*34.0)+1.0)*x);
 }
 
-float noise(vec2 v) {
+float noise(vec2 v)
+{
     const vec4 C = vec4(0.211324865405187,  // (3.0-sqrt(3.0))/6.0
                       0.366025403784439,  // 0.5*(sqrt(3.0)-1.0)
                      -0.577350269189626,  // -1.0 + 2.0 * C.x
@@ -62,14 +79,15 @@ float noise(vec2 v) {
     return 130.0 * dot(m, g);
 }
 
-vec3 curl(float	x,	float	y,	float	z) {
+vec3 curl(float	x,	float	y,	float	z)
+{
 
     float	eps	= 1., eps2 = 2. * eps;
     float	n1,	n2,	a,	b;
 
-    x += time * .05;
-    y += time * .05;
-    z += time * .05;
+    x += timer * .05;
+    y += timer * .05;
+    z += timer * .05;
 
     vec3	curl = vec3(0.);
 
@@ -106,14 +124,17 @@ vec3 curl(float	x,	float	y,	float	z) {
     return	curl;
 }
 
+
+
 void main() {
-    vec2 uv = gl_FragCoord.xy / resolution.xy;
-    vec4 tmpPos = texture2D(texturePosition, uv);
-    vec3 pos = tmpPos.xyz;
 
-    float f = 1.0;
-    float amplitude = 0.0001;
-    vec3 target = pos + amplitude * curl(f * pos.x, f * pos.y, f * pos.z);
+    vec3 pos = texture2D( texture, vUv ).xyz;
 
-    gl_FragColor = vec4(target, 1.0);
+    vec3 tar = pos + curl( pos.x * frequency, pos.y * frequency, pos.z * frequency ) * amplitude;
+
+    float d = length( pos-tar ) / maxDistance;
+    pos = mix( pos, tar, pow( d, 5. ) );
+
+    gl_FragColor = vec4( pos, 1. );
+
 }

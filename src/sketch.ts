@@ -1,11 +1,11 @@
 // imports ->
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/Addons.js'
+import { OrbitControls, GLTFLoader, GLTF, GPUComputationRenderer } from 'three/examples/jsm/Addons.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 import fragment from './shaders/frag.glsl?raw'
 import fragmentSimulation from './shaders/fragmentSimulation.glsl?raw'
 import vertex from './shaders/vert.glsl?raw'
-import { GPUComputationRenderer } from 'three/examples/jsm/Addons.js'
+import face from '/head.glb?url'
 
 // constants ->
 const device = {
@@ -13,7 +13,7 @@ const device = {
     height: window.innerHeight,
     pixelRatio: window.devicePixelRatio
 }
-const WIDTH = 32
+const WIDTH = 128
 
 export class Sketch {
     canvas: HTMLCanvasElement
@@ -27,10 +27,14 @@ export class Sketch {
     stats?: Stats
     mesh?: THREE.Points
     material?: THREE.ShaderMaterial
+    gltfLoader: GLTFLoader
+    model?: THREE.Mesh
     mouse: THREE.Vector2 = new THREE.Vector2(0, 0)
     mouseTarget: THREE.Vector2 = new THREE.Vector2(0, 0)
     dtPosition?: THREE.DataTexture
     positionVariable: any
+    facePos?: THREE.TypedArray
+    faceNum?: number
 
     constructor(canvas: HTMLCanvasElement) {
         this.time = 0
@@ -52,10 +56,21 @@ export class Sketch {
         this.renderer.setClearColor(0xeeeeee, 1)
 
         this.controls = new OrbitControls(this.camera, canvas)
+        this.gltfLoader = new GLTFLoader()
         this.clock = new THREE.Clock()
 
         this.initStats()
-        this.init()
+        this.gltfLoader.load(face, (gltf: GLTF) => {
+            this.model = gltf.scene.children[0].children[0].children[0].children[0] as THREE.Mesh
+            this.model.geometry.scale(0.025, 0.025, 0.025)
+            this.model.geometry.rotateX(Math.PI / 2 * 3)
+
+            this.facePos = this.model.geometry.attributes.position.array
+            this.faceNum = this.facePos.length / 3
+            console.log(this.facePos)
+
+            this.init()
+        })
     }
 
     init(): void {
@@ -106,6 +121,7 @@ export class Sketch {
         this.stats?.begin()
         this.time += 0.005
 
+        this.positionVariable.material.uniforms['time'].value = this.time
         this.gpuCompute?.compute()
 
         this.controls.update()
@@ -142,9 +158,10 @@ export class Sketch {
         let arr: Float32Array = texture.image.data as Float32Array
 
         for (let i = 0; i < arr.length; i += 4) {
-            let x: number = Math.random()
-            let y: number = Math.random()
-            let z: number = Math.random()
+            let rand = Math.floor(Math.random() * this.faceNum!)
+            let x: number = this.facePos![3 * rand]
+            let y: number = this.facePos![3 * rand + 1]
+            let z: number = this.facePos![3 * rand + 2]
 
             arr[i] = x
             arr[i + 1] = y
